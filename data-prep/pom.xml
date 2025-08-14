@@ -15,6 +15,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>io.jhdf</groupId>
+      <artifactId>jhdf</artifactId>
+      <version>0.9.4</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.avro</groupId>
       <artifactId>avro</artifactId>
       <version>${avro.version}</version>
