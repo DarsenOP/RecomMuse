@@ -75,3 +75,62 @@ Then to read from the Avro file, the `AvroReader.java` can be modified according
 ```bash 
 java -jar <JARNAME>.jar <INPUT_FILE>.avro
 ```
+
+# Simple Queries 
+
+After the tools and data are ready, I tried to query simple tasks, to just get into Drill a little, and most importantly understand if year prediction system is needed. Here are the results:
+- Oldest and Newest song
+```bash 
++------------------------------------+------+
+|               title                | year |
++------------------------------------+------+
+| Warm And Sunny Day                 | 1922 |
+| Warm And Sunny Day                 | 1922 |
+| Something In My Heart (Full Vocal) | 1922 |
+| Don't Pan Me                       | 1922 |
+| Mandela You're Free                | 1922 |
+| Looking My Love                    | 1922 |
++------------------------------------+------+
+
++----------+------+
+|  title   | year |
++----------+------+
+| Popinjay | 2011 |
++----------+------+
+```
+- Hottest song that is the shortest and shows highest energy with lowest tempo
+```bash 
++------------------+-----------------+-----------+--------+---------+
+|       title      | song_hotttnesss | duration  | energy |  tempo  |
++------------------+-----------------+-----------+--------+---------+
+| Jingle Bell Rock | 1.0             | 120.63302 | 0.0    | 128.711 |
++------------------+-----------------+-----------+--------+---------+
+```
+- Album with the most tracks in it 
+```bash 
++---------------+--------+
+|    release    | ntrack |
++---------------+--------+
+| Greatest Hits | 2014   |
++---------------+--------+
+```
+- Name of the artist with the longest song
+```bash 
++--------------------------------+------------+
+|          artist_name           |  duration  |
++--------------------------------+------------+
+| Mystic Revelation of Rastafari | 3034.90567 |
++--------------------------------+------------+
+```
+- Lastly the percentage of songs without year attribute 
+```bash 
++--------+
+| EXPR$0 |
++--------+
+| 48.44  |
++--------+
+```
+
+> NOTE: The SQL queries can be found in `./simple-queries/queries.sql`
+
+The most important one is the last one, which suggests that **Year Prediction System Is Essential**
