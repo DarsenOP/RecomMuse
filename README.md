@@ -76,7 +76,7 @@ Then to read from the Avro file, the `AvroReader.java` can be modified according
 java -jar <JARNAME>.jar <INPUT_FILE>.avro
 ```
 
-# Simple Queries 
+# Simple Queries (Milestone 3) 
 
 After the tools and data are ready, I tried to query simple tasks, to just get into Drill a little, and most importantly understand if year prediction system is needed. Here are the results:
 - Oldest and Newest song
