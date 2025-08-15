@@ -12,6 +12,9 @@ RecomMuse is an intelligent song recommendation system that bridges nostalgia an
 
 # Start of the project (Milestone 1 : Environment Setup)
 
+- Hadoop/Spark/Drill/Java/Maven were configured successfully
+    - The guide on how to check if everything works can be seen below
+
 Here is how to run all the components and make everything work together:
 
 1. To start Hadoop with HDFS and YARN we run 
@@ -49,3 +52,26 @@ mvn clean package
 java -jar target/<JARNAME>.jar 
 ```
 
+# Data Preparation (Milestone 2)
+
+- Because the data was given as lots of small binary files (HDF5 files), which is not ideal for HDFS (because the blocksize is 128MB), the compaction is needed
+- The Avro was chosen as the most fitting one
+- Avro schema was written to capture the maximum information
+- AvroWriter/Reader java files were written to 
+    - Read from HDF5 file and write it to Avro
+    - Read from Avro itself and extract information 
+- The Snappy Codec was used for memory efficiency (~60% in my case)
+
+Here is how to run the compaction using the scripts written:
+```bash
+cd data-prep
+mvn clean package 
+java -jar <JARNAME>.jar <INPUT_DIR> <OUTPUT_DIR>
+```
+
+For me the whole compaction took nearly 3 hours.
+
+Then to read from the Avro file, the `AvroReader.java` can be modified accordingly and run
+```bash 
+java -jar <JARNAME>.jar <INPUT_FILE>.avro
+```
