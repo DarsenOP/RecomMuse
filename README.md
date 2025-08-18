@@ -134,3 +134,77 @@ After the tools and data are ready, I tried to query simple tasks, to just get i
 > NOTE: The SQL queries can be found in `./simple-queries/queries.sql`
 
 The most important one is the last one, which suggests that **Year Prediction System Is Essential**
+
+# Artist Distance Graph (Milestone 4)
+
+There are few features that were added: Add recommendation data to REDIS, do an instant lookup from REDIS db, and a simple BFS in a Spark. 
+
+For the first one we can run 
+```bash 
+spark-submit \
+    --jars <JAR_NAME> \
+    --conf spark.driver.extraClassPath=<JAR_NAME> \
+    build_redis_cache.py --max_degrees <MAX_DEGREES> --sample_size <SAMPLE_SIZE>
+```
+
+Now in order to check and print the REDIS db we can run the following one:
+```bash 
+python3 dump_recommendations.py
+```
+
+and we get the following output 
+```bash 
+ARZPOKA11F4C83B829:
+	- AR1HDB11187FB56058 (degree 1)
+	- AR24K5Z1187B9B4BFC (degree 1)
+	- AR2CXDY1187B9B4EA8 (degree 1)
+	- AR3TZ691187FB3DBB1 (degree 1)
+	- AR3ZYST1187B9B0707 (degree 1)
+  ...
+
+ARYUXMD11F50C4AB52:
+	- AR19DTT1187FB3FA4A (degree 1)
+	- AR4Y7WE1187B98FA3F (degree 1)
+	- AR992GR1187FB3C814 (degree 1)
+	- ARBGCAL11EBCD75B65 (degree 1)
+	- ARBRWVP1241B9CC9C0 (degree 1)
+  ...
+
+ARISMYC11F50C5046D:
+	- AR00L9V1187FB4353A (degree 1)
+	- AR0B6OD1187B9ABED2 (degree 1)
+	- AR1LJAZ1187FB5AF93 (degree 1)
+	- AR2DGLV1187FB59329 (degree 1)
+	- AR2JZY41187B9B6239 (degree 1)
+  ...
+
+...
+```
+
+To check the recommendation for a certain artist we can run 
+```bash 
+python3 artist_recs.py <TARGET_ARTIST> <NUM_OF_RECOMMENDATIONS>
+```
+
+to get the following output for (ARZPOKA11F4C83B829, 8)
+```bash 
+Recommended Artists:
+	- AR1HDB11187FB56058 (degree 1)
+	- AR24K5Z1187B9B4BFC (degree 1)
+	- AR2CXDY1187B9B4EA8 (degree 1)
+	- AR3TZ691187FB3DBB1 (degree 1)
+	- AR3ZYST1187B9B0707 (degree 1)
+	- AR4K7X81187FB4BEAD (degree 1)
+	- AR6XONI1187B98DD54 (degree 1)
+	- AR7IYWW1187FB483F6 (degree 1)
+```
+
+And finally to run a BFS without REDIS db from a certain artist using 
+```bash 
+spark-submit \
+    --jars <JAR_NAME> \
+    --conf spark.driver.extraClassPath=<JAR_NAME> \
+    find_similar_artists.py <TARGET_ARTIST> <MAX_DEGREES> <NUM_OF_RECOMMENDATIONS>
+```
+
+and got the same type of output.
