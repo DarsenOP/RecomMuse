@@ -3,10 +3,7 @@ package com.recommuse;
 import io.jhdf.HdfFile;
 import io.jhdf.api.Dataset;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
@@ -26,13 +23,13 @@ public class HDF5Reader {
       LinkedHashMap < String, Object > musicbrainzSong = (LinkedHashMap < String, Object > ) musicbrainzSongsDataset.getData();
 
       // Read array datasets with null checks
-      List < Double > barsStart = safeReadDoubleList(hdfFile, "analysis/bars_start");
-      List < Double > beatsStart = safeReadDoubleList(hdfFile, "analysis/beats_start");
-      List < Double > segmentsStart = safeReadDoubleList(hdfFile, "analysis/segments_start");
-      List < Double > segmentsLoudnessMax = safeReadDoubleList(hdfFile, "analysis/segments_loudness_max");
+      List < Double > barsStart = extract1DStats(safeReadDoubleList(hdfFile, "analysis/bars_start"));
+      List < Double > beatsStart = extract1DStats(safeReadDoubleList(hdfFile, "analysis/beats_start"));
+      List < Double > segmentsStart = extract1DStats(safeReadDoubleList(hdfFile, "analysis/segments_start"));
+      List < Double > segmentsLoudnessMax = extract1DStats(safeReadDoubleList(hdfFile, "analysis/segments_loudness_max"));
 
-      List < List < Double >> segmentsPitches = safeRead2DDoubleList(hdfFile, "analysis/segments_pitches");
-      List < List < Double >> segmentsTimbre = safeRead2DDoubleList(hdfFile, "analysis/segments_timbre");
+      List < Double > segmentsPitches = extract2DStats(safeRead2DDoubleList(hdfFile, "analysis/segments_pitches"));
+      List < Double > segmentsTimbre = extract2DStats(safeRead2DDoubleList(hdfFile, "analysis/segments_timbre"));
 
       // Build Avro object
       return RecomMuse.newBuilder()
@@ -71,6 +68,69 @@ public class HDF5Reader {
         .build();
     } catch (Exception e) {
       throw new RuntimeException("Error reading HDF5 file: " + hdf5Path, e);
+    }
+  }
+
+   private static List<Double> extract1DStats(List<Double> array) {
+    if (array == null || array.isEmpty()) {
+      return Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    }
+    
+    double[] primitive = array.stream().mapToDouble(Double::doubleValue).toArray();
+    
+    // Calculate statistics
+    double mean = Arrays.stream(primitive).average().orElse(0.0);
+    double median = calculateMedian(primitive);
+    double min = Arrays.stream(primitive).min().orElse(0.0);
+    double max = Arrays.stream(primitive).max().orElse(0.0);
+    double std = Math.sqrt(Arrays.stream(primitive)
+                              .map(v -> Math.pow(v - mean, 2))
+                              .average().orElse(0.0));
+    double count = (double) array.size();
+    
+    return Arrays.asList(mean, median, min, max, std, count);
+  }
+
+  private static List<Double> extract2DStats(List<List<Double>> array2D) {
+    if (array2D == null || array2D.isEmpty()) {
+      return Collections.nCopies(72, 0.0); // 12 dimensions × 6 stats = 72
+    }
+    
+    List<Double> stats = new ArrayList<>();
+    
+    // For each of the 12 dimensions, extract 6 statistics
+    for (int dim = 0; dim < 12; dim++) {
+      final int dimension = dim;
+      
+      // Extract values for this dimension across all segments
+      double[] dimValues = array2D.stream()
+          .mapToDouble(segment -> {
+            if (segment != null && segment.size() > dimension) {
+              return segment.get(dimension);
+            }
+            return 0.0;
+          })
+          .toArray();
+      
+      // Convert to list and extract statistics
+      List<Double> dimList = DoubleStream.of(dimValues).boxed().collect(Collectors.toList());
+      stats.addAll(extract1DStats(dimList));
+    }
+    
+    return stats;
+  }
+
+  private static double calculateMedian(double[] values) {
+    if (values.length == 0) return 0.0;
+    
+    double[] sorted = values.clone();
+    Arrays.sort(sorted);
+    
+    int middle = sorted.length / 2;
+    if (sorted.length % 2 == 0) {
+      return (sorted[middle - 1] + sorted[middle]) / 2.0;
+    } else {
+      return sorted[middle];
     }
   }
 

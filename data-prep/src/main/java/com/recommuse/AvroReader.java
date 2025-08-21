@@ -28,7 +28,7 @@ public class AvroReader {
         // System.out.println(record.getRelease7digitalid());
         // System.out.println(record.getTrack7digitalid());
         // System.out.println(record.getSongId());
-        System.out.println(record.getTrackId());
+        // System.out.println(record.getTrackId());
         //
         // System.out.println(record.getTitle());
         // System.out.println(record.getArtistName());
@@ -53,8 +53,8 @@ public class AvroReader {
         // System.out.println(record.getBeatsStart());
         // System.out.println(record.getSegmentsStart());
         // System.out.println(record.getSegmentsLoudnessMax());
-        // System.out.println(record.getSegmentsPitches());
-        // System.out.println(record.getSegmentsTimbre());
+        System.out.println(record.getSegmentsPitches());
+        System.out.println(record.getSegmentsTimbre());
         //
         // System.out.println(record.etYear());
 
