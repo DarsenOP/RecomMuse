@@ -15,15 +15,12 @@
 
     {"name": "title",                   "type": ["null", "string"], "default": null},
     {"name": "artist_name",             "type": ["null", "string"], "default": null},
-    {"name": "genre",                   "type": ["null", "string"], "default": null},
     {"name": "release",                 "type": ["null", "string"], "default": null},
     {"name": "artist_familiarity",      "type": ["null", "double"], "default": null},
     {"name": "artist_hotttnesss",       "type": ["null", "double"], "default": null},
     {"name": "song_hotttnesss",         "type": ["null", "double"], "default": null},
 
-    {"name": "danceability",            "type": ["null", "double"], "default": null},
     {"name": "duration",                "type": ["null", "double"], "default": null},
-    {"name": "energy",                  "type": ["null", "double"], "default": null},
     {"name": "key",                     "type": ["null", "int"],    "default": null},
     {"name": "tempo",                   "type": ["null", "double"], "default": null},
     {"name": "mode",                    "type": ["null", "int"],    "default": null},
@@ -32,12 +29,10 @@
     {"name": "key_confidence",          "type": ["null", "double"], "default": null},
     {"name": "mode_confidence",         "type": ["null", "double"], "default": null},
 
-    {"name": "bars_start",              "type": ["null", {"type": "array", "items": "double"}], "default": null},
-    {"name": "beats_start",             "type": ["null", {"type": "array", "items": "double"}], "default": null},
-    {"name": "segments_start",          "type": ["null", {"type": "array", "items": "double"}], "default": null},
-    {"name": "segments_loudness_max",   "type": ["null", {"type": "array", "items": "double"}], "default": null},
     {"name": "segments_timbre",         "type": ["null", {"type": "array", "items": "double"}], "default": null},
     {"name": "segments_pitches",        "type": ["null", {"type": "array", "items": "double"}], "default": null},
+    {"name": "timbre_cov",              "type": ["null", {"type": "array", "items": "double"}], "default": null},
+    {"name": "pitch_cov",               "type": ["null", {"type": "array", "items": "double"}], "default": null},
 
     {"name": "year",                    "type": ["null", "int"],    "default": null}
   ]
