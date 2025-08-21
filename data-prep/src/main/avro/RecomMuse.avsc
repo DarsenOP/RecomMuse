@@ -36,8 +36,8 @@
     {"name": "beats_start",             "type": ["null", {"type": "array", "items": "double"}], "default": null},
     {"name": "segments_start",          "type": ["null", {"type": "array", "items": "double"}], "default": null},
     {"name": "segments_loudness_max",   "type": ["null", {"type": "array", "items": "double"}], "default": null},
-    {"name": "segments_pitches",        "type": ["null", {"type": "array", "items": {"type": "array", "items": "double"}}], "default": null},
-    {"name": "segments_timbre",         "type": ["null", {"type": "array", "items": {"type": "array", "items": "double"}}], "default": null},
+    {"name": "segments_timbre",         "type": ["null", {"type": "array", "items": "double"}], "default": null},
+    {"name": "segments_pitches",        "type": ["null", {"type": "array", "items": "double"}], "default": null},
 
     {"name": "year",                    "type": ["null", "int"],    "default": null}
   ]
