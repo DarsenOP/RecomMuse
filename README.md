@@ -206,3 +206,21 @@ spark-submit \
 ```
 
 and got the same type of output.
+
+# Year Prediction (Milestone 5)
+
+To run the year prediction model to check how good it performs you can use
+```bash
+./run-year-prediction.sh
+```
+
+To run the final prediction model and save it for further use you can type  
+```bash 
+./run-year-prediction-final.sh
+```
+
+And finally to run the model and predict the years (by replacing the year 0 in the Avro with the predicted one) you can use 
+```bash 
+./run-year-prediction-use.sh
+```
+
