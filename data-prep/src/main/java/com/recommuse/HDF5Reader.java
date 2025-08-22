@@ -3,10 +3,7 @@ package com.recommuse;
 import io.jhdf.HdfFile;
 import io.jhdf.api.Dataset;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 
@@ -26,14 +23,12 @@ public class HDF5Reader {
       LinkedHashMap < String, Object > musicbrainzSong = (LinkedHashMap < String, Object > ) musicbrainzSongsDataset.getData();
 
       // Read array datasets with null checks
-      List < Double > barsStart = safeReadDoubleList(hdfFile, "analysis/bars_start");
-      List < Double > beatsStart = safeReadDoubleList(hdfFile, "analysis/beats_start");
-      List < Double > segmentsStart = safeReadDoubleList(hdfFile, "analysis/segments_start");
-      List < Double > segmentsLoudnessMax = safeReadDoubleList(hdfFile, "analysis/segments_loudness_max");
+      List < Double > segmentsPitches = extract2DStats(safeRead2DDoubleList(hdfFile, "analysis/segments_pitches"));
+      List < Double > segmentsTimbre = extract2DStats(safeRead2DDoubleList(hdfFile, "analysis/segments_timbre"));
 
-      List < List < Double >> segmentsPitches = safeRead2DDoubleList(hdfFile, "analysis/segments_pitches");
-      List < List < Double >> segmentsTimbre = safeRead2DDoubleList(hdfFile, "analysis/segments_timbre");
-
+      List < Double > timbreCov = extractCovariance(safeRead2DDoubleList(hdfFile, "analysis/segments_timbre"));
+      List < Double > pitchCov  = extractCovariance(safeRead2DDoubleList(hdfFile, "analysis/segments_pitches"));
+      
       // Build Avro object
       return RecomMuse.newBuilder()
         .setArtistId(safeGetString(metadataSong, "artist_id"))
@@ -46,14 +41,11 @@ public class HDF5Reader {
         .setTrackId(safeGetString(analysisSong, "track_id"))
         .setTitle(safeGetString(metadataSong, "title"))
         .setArtistName(safeGetString(metadataSong, "artist_name"))
-        .setGenre(safeGetString(metadataSong, "genre"))
         .setRelease(safeGetString(metadataSong, "release"))
         .setArtistFamiliarity(safeGetDouble(metadataSong, "artist_familiarity"))
         .setArtistHotttnesss(safeGetDouble(metadataSong, "artist_hotttnesss"))
         .setSongHotttnesss(safeGetDouble(metadataSong, "song_hotttnesss"))
-        .setDanceability(safeGetDouble(analysisSong, "danceability"))
         .setDuration(safeGetDouble(analysisSong, "duration"))
-        .setEnergy(safeGetDouble(analysisSong, "energy"))
         .setKey(safeGetInt(analysisSong, "key"))
         .setTempo(safeGetDouble(analysisSong, "tempo"))
         .setMode(safeGetInt(analysisSong, "mode"))
@@ -61,17 +53,133 @@ public class HDF5Reader {
         .setTimeSignature(safeGetInt(analysisSong, "time_signature"))
         .setKeyConfidence(safeGetDouble(analysisSong, "key_confidence"))
         .setModeConfidence(safeGetDouble(analysisSong, "mode_confidence"))
-        .setBarsStart(barsStart)
-        .setBeatsStart(beatsStart)
-        .setSegmentsStart(segmentsStart)
-        .setSegmentsLoudnessMax(segmentsLoudnessMax)
         .setSegmentsPitches(segmentsPitches)
         .setSegmentsTimbre(segmentsTimbre)
+        .setTimbreCov(timbreCov)
+        .setPitchCov(pitchCov)
         .setYear(safeGetInt(musicbrainzSong, "year"))
         .build();
     } catch (Exception e) {
       throw new RuntimeException("Error reading HDF5 file: " + hdf5Path, e);
     }
+  }
+
+   private static List<Double> extract1DStats(List<Double> array) {
+    if (array == null || array.isEmpty()) {
+      return Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    }
+    
+    double[] primitive = array.stream().mapToDouble(Double::doubleValue).toArray();
+    
+    // Calculate statistics
+    double mean = Arrays.stream(primitive).average().orElse(0.0);
+    double median = calculateMedian(primitive);
+    double min = Arrays.stream(primitive).min().orElse(0.0);
+    double max = Arrays.stream(primitive).max().orElse(0.0);
+    double std = Math.sqrt(Arrays.stream(primitive)
+                              .map(v -> Math.pow(v - mean, 2))
+                              .average().orElse(0.0));
+    double count = (double) array.size();
+    
+    return Arrays.asList(mean, median, min, max, std, count);
+  }
+
+  private static List<Double> extract2DStats(List<List<Double>> array2D) {
+    if (array2D == null || array2D.isEmpty()) {
+      return Collections.nCopies(72, 0.0); // 12 dimensions × 6 stats = 72
+    }
+    
+    List<Double> stats = new ArrayList<>();
+    
+    // For each of the 12 dimensions, extract 6 statistics
+    for (int dim = 0; dim < 12; dim++) {
+      final int dimension = dim;
+      
+      // Extract values for this dimension across all segments
+      double[] dimValues = array2D.stream()
+          .mapToDouble(segment -> {
+            if (segment != null && segment.size() > dimension) {
+              return segment.get(dimension);
+            }
+            return 0.0;
+          })
+          .toArray();
+      
+      // Convert to list and extract statistics
+      List<Double> dimList = DoubleStream.of(dimValues).boxed().collect(Collectors.toList());
+      stats.addAll(extract1DStats(dimList));
+    }
+    
+    return stats;
+  }
+
+  private static double calculateMedian(double[] values) {
+    if (values.length == 0) return 0.0;
+    
+    double[] sorted = values.clone();
+    Arrays.sort(sorted);
+    
+    int middle = sorted.length / 2;
+    if (sorted.length % 2 == 0) {
+      return (sorted[middle - 1] + sorted[middle]) / 2.0;
+    } else {
+      return sorted[middle];
+    }
+  }
+
+  private static List<Double> extractCovariance(List<List<Double>> matrix2D) {
+    if (matrix2D == null || matrix2D.isEmpty()) {
+        return Collections.nCopies(78, 0.0);
+    }
+
+    int rows = matrix2D.size();
+    int cols = 12;                       // timbre & pitches have 12 dimensions
+    double[][] data = new double[cols][rows];
+
+    // transpose to column-major (each row is one segment, each column is one dim)
+    for (int seg = 0; seg < rows; seg++) {
+        List<Double> row = matrix2D.get(seg);
+        for (int dim = 0; dim < cols && dim < row.size(); dim++) {
+            data[dim][seg] = row.get(dim);
+        }
+    }
+
+    // compute covariance
+    double[][] cov = covarianceMatrix(data);
+
+    // flatten upper-triangle
+    List<Double> result = new ArrayList<>(78);
+    for (int i = 0; i < 12; i++) {
+        for (int j = i; j < 12; j++) {
+            result.add(cov[i][j]);
+        }
+    }
+    return result;
+  }
+
+  private static double[][] covarianceMatrix(double[][] columnMajor) {
+    int nDims = columnMajor.length;
+    int nObs  = columnMajor[0].length;
+    double[][] cov = new double[nDims][nDims];
+
+    double[] mean = new double[nDims];
+    for (int i = 0; i < nDims; i++) {
+        double sum = 0.0;
+        for (int j = 0; j < nObs; j++) sum += columnMajor[i][j];
+        mean[i] = sum / nObs;
+    }
+
+    for (int i = 0; i < nDims; i++) {
+        for (int j = i; j < nDims; j++) {
+            double sum = 0.0;
+            for (int k = 0; k < nObs; k++) {
+                sum += (columnMajor[i][k] - mean[i]) * (columnMajor[j][k] - mean[j]);
+            }
+            cov[i][j] = sum / (nObs - 1);
+            cov[j][i] = cov[i][j]; // symmetric
+        }
+    }
+    return cov;
   }
 
   private static String safeGetString(Map < String, Object > map, String key) {

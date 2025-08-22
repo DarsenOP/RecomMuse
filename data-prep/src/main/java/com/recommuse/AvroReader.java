@@ -28,19 +28,16 @@ public class AvroReader {
         // System.out.println(record.getRelease7digitalid());
         // System.out.println(record.getTrack7digitalid());
         // System.out.println(record.getSongId());
-        System.out.println(record.getTrackId());
+        // System.out.println(record.getTrackId());
         //
         // System.out.println(record.getTitle());
         // System.out.println(record.getArtistName());
-        // System.out.println(record.getGenre());
         // System.out.println(record.getRelease());
         // System.out.println(record.getArtistFamiliarity());
         // System.out.println(record.getArtistHotttnesss());
         // System.out.println(record.getSongHotttnesss());
         //
-        // System.out.println(record.getDanceability());
         // System.out.println(record.getDuration());
-        // System.out.println(record.getEnergy());
         // System.out.println(record.getKey());
         // System.out.println(record.getTempo());
         // System.out.println(record.getMode());
@@ -49,12 +46,10 @@ public class AvroReader {
         // System.out.println(record.getKeyConfidence());
         // System.out.println(record.getModeConfidence());
         //
-        // System.out.println(record.getBarsStart());
-        // System.out.println(record.getBeatsStart());
-        // System.out.println(record.getSegmentsStart());
-        // System.out.println(record.getSegmentsLoudnessMax());
         // System.out.println(record.getSegmentsPitches());
         // System.out.println(record.getSegmentsTimbre());
+        System.out.println(record.getPitchCov());
+        System.out.println(record.getTimbreCov());
         //
         // System.out.println(record.etYear());
 

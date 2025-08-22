@@ -60,7 +60,7 @@ java -jar target/<JARNAME>.jar
 - AvroWriter/Reader java files were written to 
     - Read from HDF5 file and write it to Avro
     - Read from Avro itself and extract information 
-- The Snappy Codec was used for memory efficiency (~60% in my case)
+- The Snappy Codec was used for memory efficiency (~99.6% in my case)
 
 Here is how to run the compaction using the scripts written:
 ```bash
@@ -68,8 +68,6 @@ cd data-prep
 mvn clean package 
 java -jar <JARNAME>.jar <INPUT_DIR> <OUTPUT_DIR>
 ```
-
-For me the whole compaction took nearly 3 hours.
 
 Then to read from the Avro file, the `AvroReader.java` can be modified accordingly and run
 ```bash 
@@ -208,3 +206,21 @@ spark-submit \
 ```
 
 and got the same type of output.
+
+# Year Prediction (Milestone 5)
+
+To run the year prediction model to check how good it performs you can use
+```bash
+./run-year-prediction.sh
+```
+
+To run the final prediction model and save it for further use you can type  
+```bash 
+./run-year-prediction-final.sh
+```
+
+And finally to run the model and predict the years (by replacing the year 0 in the Avro with the predicted one) you can use 
+```bash 
+./run-year-prediction-use.sh
+```
+
