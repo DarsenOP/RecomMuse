@@ -2,6 +2,7 @@
 RDD-only BFS for ONE target artist (CLI version).
 No driver-side loops over the graph.
 """
+
 import argparse
 import random
 from pyspark.sql import SparkSession
@@ -52,7 +53,7 @@ def find_similar_artists_rdd_single(spark,
     # 3. Parallel BFS iterations
     # -------------------------------------------------------------
     for degree in range(1, max_degrees + 1):
-        # frontier: (vertex, (root, prev_degree))
+        # frontier : (vertex, (root, prev_degree))
         # edges    : (vertex, neighbor)
         next_frontier = (
             frontier
@@ -65,9 +66,9 @@ def find_similar_artists_rdd_single(spark,
         visited = paths.map(lambda x: (x[0], x[1]))
         next_frontier = (
             next_frontier
-            .map(lambda x: ((x[1][0], x[0]), x[1][1]))  # ((root, vertex), degree)
+            .map(lambda x: ((x[1][0], x[0]), x[1][1]))   # ((root, vertex), degree)
             .subtract(visited.map(lambda x: (x, 1)))     # ((root, vertex), _)
-            .map(lambda x: (x[0][0], x[0][1], x[1]))    # (root, vertex, degree)
+            .map(lambda x: (x[0][0], x[0][1], x[1]))     # (root, vertex, degree)
         )
 
         paths = paths.union(next_frontier)
@@ -78,16 +79,15 @@ def find_similar_artists_rdd_single(spark,
     # -------------------------------------------------------------
     recommendations = (
         paths
-        .filter(lambda x: x[2] > 0)                          # drop start_artist_id
-        .map(lambda x: (x[1], x[2]))                         # (vertex, degree)
-        .groupByKey()                                        # (vertex, [degree, …])
-        .mapValues(lambda ds: min(ds))                       # shortest degree
-        .map(lambda x: (x[1], x[0]))                         # (degree, vertex)
-        .groupByKey()                                        # (degree, [vertex, …])
+        .filter(lambda x: x[2] > 0)                             # drop start_artist_id
+        .map(lambda x: (x[1], x[2]))                            # (vertex, degree)
+        .groupByKey()                                           # (vertex, [degree, …])
+        .mapValues(lambda ds: min(ds))                          # shortest degree
+        .map(lambda x: (x[1], x[0]))                            # (degree, vertex)
+        .groupByKey()                                           # (degree, [vertex, …])
         .flatMap(lambda d_vs: [(v, d_vs[0]) for v in d_vs[1]])  # flatten
     )
 
-    # deterministic shuffle & limit at driver (tiny data)
     random.seed(42)
     by_degree = {}
     for v, d in recommendations.collect():
@@ -106,9 +106,6 @@ def find_similar_artists_rdd_single(spark,
 
     return out[:num_recommendations]
 
-# ------------------------------------------------------------------
-# CLI wrapper (unchanged signature)
-# ------------------------------------------------------------------
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Find similar artists (RDD-only BFS)")
     parser.add_argument('target_artist', type=str)
@@ -129,6 +126,7 @@ if __name__ == "__main__":
             max_degrees=args.max_depth,
             num_recommendations=args.num_rec
         )
+
         print("\nRecommended Artists:")
         for artist_id, degree in recs:
             print(f"\t- {artist_id} (degree {degree})")

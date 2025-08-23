@@ -10,8 +10,6 @@ from pyspark.ml.evaluation import RegressionEvaluator
 
 spark = SparkSession.builder \
     .appName("YearPrediction") \
-    .config("spark.driver.memory", "28g") \
-    .config("spark.executor.memory", "28g") \
     .config("spark.driver.maxResultSize", "8g") \
     .config("spark.sql.adaptive.enabled", "true") \
     .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
@@ -20,11 +18,6 @@ spark = SparkSession.builder \
     .getOrCreate()
 
 # ------------- verify at runtime -------------
-print("Driver heap limit:",
-      spark.sparkContext.getConf().get("spark.driver.memory"))
-print("Executor heap limit:",
-      spark.sparkContext.getConf().get("spark.executor.memory"))
-
 print("✅ Spark initialized successfully!")
 
 # ========== 2 ========== #
@@ -127,7 +120,7 @@ print("✅ Rows with null/NaN dropped successfully!")
 
 # ========== 7 ========== #
 
-assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
+assembler = VectorAssembler(inputCols=feature_cols, outputCol="features", handleInvalid="skip")
 
 print("✅ Assembling finished successfully!")
 
@@ -136,31 +129,17 @@ print("✅ Assembling finished successfully!")
 gbt = GBTRegressor(
     featuresCol="features",
     labelCol="year",
-    maxIter=200,
-    maxDepth=10,
-    stepSize=0.03,
-    minInstancesPerNode=5,
+    maxIter=150,
+    maxDepth=8,
+    stepSize=0.05,
     seed=42
 )
-
-grid = (ParamGridBuilder()
-        .addGrid(gbt.maxIter,   [150])
-        .addGrid(gbt.maxDepth,  [8])
-        .addGrid(gbt.stepSize,  [0.05])
-        .build())
-
-cv = CrossValidator(estimator=gbt,
-                    estimatorParamMaps=grid,
-                    evaluator=RegressionEvaluator(labelCol="year", metricName="rmse"),
-                    numFolds=3,
-                    parallelism=2,
-                    seed=42)
 
 print("✅ Regressor created successfully!")
 
 # ========== 9 ========== #
 
-pipeline = Pipeline(stages=[assembler, cv])
+pipeline = Pipeline(stages=[assembler, gbt])
 
 print("✅ Pipeline created successfully!")
 
@@ -172,19 +151,5 @@ print("✅ Train / test split finished successfully!")
 # ========== 11 ========== #
 
 model = pipeline.fit(train_df)
-print("✅ Model fitted successfully!")
-
-# ========== 12 ========== #
-
-pred_df = model.transform(test_df)
-print("✅ Predictions computed successfully!")
-
-# ========== 13 ========== #
-
-evaluator = RegressionEvaluator(labelCol="year", predictionCol="prediction", metricName="rmse")
-rmse = evaluator.evaluate(pred_df)
-print(f"RMSE (years): {rmse:.2f}")
-
-for m in ["r2", "mae"]:
-    evaluator.setMetricName(m)
-    print(f"{m.upper()}: {evaluator.evaluate(pred_df):.3f}")
+model.save("file:///home/senmrx/Documents/RecomMuse/year_regressor_final")
+print("✅ Model fitted successfully and saved!")

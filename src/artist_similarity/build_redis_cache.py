@@ -91,7 +91,7 @@ def parallel_bfs_sample(spark,
     for root, recs in results:
         pipe.set(f"artist:{root}:recs", json.dumps(recs))
     pipe.execute()
-    print(f"Cached {len(results)} sampled artists to Redis")
+    print(f"✅ Cached {len(results)} sampled artists to Redis")
 
 # -------------------------------------------------------------
 # Entry point

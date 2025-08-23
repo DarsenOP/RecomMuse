@@ -24,8 +24,7 @@ def main():
         for rec_id, degree in recs:
             print(f"\t- {rec_id} (degree {degree})")
             cur_rec += 1
-            if (cur_rec == 5):
-                break
+
         print()   # blank line between targets
 
 if __name__ == "__main__":

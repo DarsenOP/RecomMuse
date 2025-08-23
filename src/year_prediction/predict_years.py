@@ -7,8 +7,8 @@ from pyspark.sql.functions import round
 print("🚀 Starting Spark session...")
 spark = SparkSession.builder \
     .appName("FillMissingYears") \
-    .config("spark.driver.memory", "28g") \
-    .config("spark.executor.memory", "28g") \
+    .config("spark.driver.memory", "8g") \
+    .config("spark.executor.memory", "8g") \
     .config("spark.driver.maxResultSize", "8g") \
     .getOrCreate()
 print("✅ Spark session started.")

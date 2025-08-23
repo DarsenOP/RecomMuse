@@ -24,7 +24,8 @@ if __name__ == "__main__":
     parser.add_argument("--redis_port", type=int, default=6379)
     args = parser.parse_args()
 
-    recs = main()
+    recs = main(args.artist_id, args.k, args.redis_host, args.redis_port)
+
     print("\nRecommended Artists:")
     for aid, deg in recs:
         print(f"\t- {aid} (degree {deg})")

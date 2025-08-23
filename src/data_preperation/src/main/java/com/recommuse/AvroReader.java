@@ -5,7 +5,6 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.specific.SpecificDatumReader;
 import java.io.File;
 
-
 public class AvroReader {
   public static void readAvro(String avroPath) {
     File file = new File(avroPath);
@@ -13,13 +12,12 @@ public class AvroReader {
 
     try (DataFileReader < RecomMuse > dataFileReader = new DataFileReader < > (file, datumReader)) {
       System.out.println("Schema: " + dataFileReader.getSchema());
-      System.out.println("Records found: " + dataFileReader.getBlockCount());
 
       int recordCount = 0;
       while (dataFileReader.hasNext()) {
         RecomMuse record = dataFileReader.next();
         System.out.println("Record #" + (++recordCount));
-        
+
         // Sample verification - check if required fields exist
         // System.out.println(record.getArtistId());
         // System.out.println(record.getArtist7digitalid());
@@ -48,8 +46,8 @@ public class AvroReader {
         //
         // System.out.println(record.getSegmentsPitches());
         // System.out.println(record.getSegmentsTimbre());
-        System.out.println(record.getPitchCov());
-        System.out.println(record.getTimbreCov());
+        // System.out.println(record.getPitchCov());
+        // System.out.println(record.getTimbreCov());
         //
         // System.out.println(record.etYear());
 
@@ -57,6 +55,8 @@ public class AvroReader {
         //   System.err.println("WARNING: Missing Year in record " + recordCount);
         // }
       }
+      
+      System.out.println("Records found: " + recordCount);
     } catch (Exception e) {
       throw new RuntimeException("Error reading Avro file: " + avroPath, e);
     }
