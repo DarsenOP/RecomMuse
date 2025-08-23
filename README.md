@@ -2,6 +2,10 @@
 **End-to-end nostalgia-driven music recommender**  
 *Built after finishing freshman year – data pipelines, Spark, Redis, and a touch of sentiment.* 
 
+## 🚀 Demo
+
+![RecomMuse Demo](docs/assets/demo.gif)
+
 ---
 
 ## 📌 Overview  
