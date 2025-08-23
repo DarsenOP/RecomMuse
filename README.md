@@ -224,3 +224,12 @@ And finally to run the model and predict the years (by replacing the year 0 in t
 ./run-year-prediction-use.sh
 ```
 
+# Song Recommendation (Milestone 6)
+
+To run the song recommendation program run
+```bash
+./RecomMuse.sh 
+```
+
+
+> NOTE: The song recommendation works with REDIS, but the REDIS was not fully built, because of time constraints!
