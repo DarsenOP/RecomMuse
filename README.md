@@ -76,26 +76,6 @@ RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendatio
 
 Run `RecomMuse.sh`
 
-## 📂 Project layout
-
-RecomMuse/
-├──  data
-├──  docker-compose.yml
-├──  docs
-├── 󱁻 drill_condig_web.conf
-├──  lib
-├──  LICENSE
-├── 󰂺 README.md
-├──  requirements.txt
-├──  run-drill.sh
-├──  scripts
-└── 󰣞 src
-    ├──  artist_similarity
-    ├──  data_preperation
-    ├──  drill-queries
-    ├──  nostalgic_recommender
-    └──  year_prediction
-
 ## License
 MIT – hack away and make it yours.
 
