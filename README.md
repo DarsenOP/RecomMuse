@@ -1,235 +1,102 @@
-# RecomMuse
-RecomMuse - Your soundtrack to the past, presents the future
+# RecomMuse 🎧  
+**End-to-end nostalgia-driven music recommender**  
+*Built after finishing freshman year – data pipelines, Spark, Redis, and a touch of sentiment.* 
 
-RecomMuse is an intelligent song recommendation system that bridges nostalgia and discovery. By analyzing user preferences and listening history, it curates personalized playlists blending nostalgic favorites with fresh, forward-thinking tracks—turning memories into music and anticipation into melody.
+---
 
-## Key Features
+## 📌 Overview  
+RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendation** by:  
+1. Predicting the release year for tracks that lack it (Spark GBT).  
+2. Performing a breadth-first search on an artist-similarity graph (Spark RDD -> Redis).  
+3. Selecting the song from a similar artist whose release year is closest to “listener was 16”.
 
-- **Nostalgia-Driven Recommendations** – Rediscover forgotten gems tailored to your past tastes.
-- **Future-Focused Suggestions** – Explore new music aligned with your evolving preferences.
-- **Dynamic Personalization** – ML-powered insights refine recommendations over time.
-- **User-Centric Design** – Intuitive interface for seamless exploration.
+---
 
-# Start of the project (Milestone 1 : Environment Setup)
+## 🧰 Prerequisites  
+| Component | Purpose |
+|-----------|---------|
+| **Java** | Spark & Drill runtime |
+| **Maven** | Build Java helpers |
+| **Python** | CLI, Redis client |
+| **Spark** | Distributed BFS & ML |
+| **Hadoop** | HDFS backend for Apache Drill |
+| **Redis** | Low-latency neighbour cache |
+| **Apache Drill** | SQL exploration on HDFS/Avro |
 
-- Hadoop/Spark/Drill/Java/Maven were configured successfully
-    - The guide on how to check if everything works can be seen below
+> 🔧 **Need help installing Hadoop/Spark/Drill?**  
+> See [Issue #1](https://github.com/DarsenOP/RecomMuse/issues/1) – step-by-step setup is explained there.
 
-Here is how to run all the components and make everything work together:
+---
 
-1. To start Hadoop with HDFS and YARN we run 
-```bash 
-start-all.sh # start-dfs.sh && start-yarn.sh
-```
-2. After that we can run Drill by just typing 
-```bash 
-docker compose up
-```
-then connect to the terminal SQL line with 
-```bash 
-./run-drill.sh 
-```
-3. Here is how we can run Spark with Avro
-```bash 
-spark-submit \ 
-  --master yarn \
-  --packages org.apache.spark:spark-avro_2.13:4.0.0 \
-  --conf spark.yarn.appMasterEnv.JAVA_HOME=/usr/lib/jvm/java-17-openjdk \
-  --conf spark.executorEnv.JAVA_HOME=/usr/lib/jvm/java-17-openjdk \
-  <FILENAME>.py
-```
-4. And lastly Maven. To generate a hierarchy in maven use 
-```bash 
-mvn archetype:generate \
-  -DgroupId=com.example \
-  -DartifactId=maven-test \
-  -DarchetypeArtifactId=maven-archetype-quickstart \
-  -DinteractiveMode=false
-```
-Then do the needed modification to the `pom.xml` file and finally run the following commands to compile and run it
-```bash 
-mvn clean package 
-java -jar target/<JARNAME>.jar 
-```
+## 📊 Data Preparation  
+1. **HDF5 -> Avro**  
+   ```bash
+   cd data-preparation
+   mvn clean package
+   # Convert an entire folder
+   java -jar target/<JAR_NAME_WITH_DEPENDENCIES> /path/to/h5_folder /path/to/output_folder
+   # Or inspect a single file
+   java -jar target/<JAR_NAME_WITH_DEPENDENCIES> /path/to/single.avro
+   ```
 
-# Data Preparation (Milestone 2)
+2. Start Drill & HDFS
+   ```bash
+   start-all.sh
+   docker compose up
+   ./run-drill.sh
+   # Copy drill_condig_web.conf into Drill Web UI -> Storage -> dfs -> Update
+   ```
 
-- Because the data was given as lots of small binary files (HDF5 files), which is not ideal for HDFS (because the blocksize is 128MB), the compaction is needed
-- The Avro was chosen as the most fitting one
-- Avro schema was written to capture the maximum information
-- AvroWriter/Reader java files were written to 
-    - Read from HDF5 file and write it to Avro
-    - Read from Avro itself and extract information 
-- The Snappy Codec was used for memory efficiency (~99.6% in my case)
+## 🚀 Running RecomMuse
 
-Here is how to run the compaction using the scripts written:
-```bash
-cd data-prep
-mvn clean package 
-java -jar <JARNAME>.jar <INPUT_DIR> <OUTPUT_DIR>
-```
+1. 🔧 One-time environment
+    ```bash
+    chmod +x setup_env.sh
+    ./setup_env.sh
+    source .venv/bin/activate  
+    ```
 
-Then to read from the Avro file, the `AvroReader.java` can be modified accordingly and run
-```bash 
-java -jar <JARNAME>.jar <INPUT_FILE>.avro
-```
+2. 🧠 Year pipeline (first time only)
+    ```bash
+    ./run_train_model.sh    # train GBT regressor
+    ./run_evaluate_model.sh # optional RMSE/R² check
+    ./run_predict_years.sh  # fill missing years
+    ```
 
-# Simple Queries (Milestone 3) 
+3. 🎶 Artist similarity (pick one)
 
-After the tools and data are ready, I tried to query simple tasks, to just get into Drill a little, and most importantly understand if year prediction system is needed. Here are the results:
-- Oldest and Newest song
-```bash 
-+------------------------------------+------+
-|               title                | year |
-+------------------------------------+------+
-| Warm And Sunny Day                 | 1922 |
-| Warm And Sunny Day                 | 1922 |
-| Something In My Heart (Full Vocal) | 1922 |
-| Don't Pan Me                       | 1922 |
-| Mandela You're Free                | 1922 |
-| Looking My Love                    | 1922 |
-+------------------------------------+------+
+| Command                                        | Description                                      |
+| ---------------------------------------------- | ------------------------------------------------ |
+| `./run_build_redis_cache.sh`                   | Pre-compute neighbours for random sample → Redis |
+| `./run_find_similar_artists.sh ARTIST_ID 3 10` | On-demand BFS (Spark)                            |
+| `./run_artist_recs.sh ARTIST_ID 5`             | Instant Redis lookup                             |
+| `./run_dump_recommendations.sh`                | List every cached artist                         |
 
-+----------+------+
-|  title   | year |
-+----------+------+
-| Popinjay | 2011 |
-+----------+------+
-```
-- Hottest song that is the shortest and shows highest energy with lowest tempo
-```bash 
-+------------------+-----------------+-----------+--------+---------+
-|       title      | song_hotttnesss | duration  | energy |  tempo  |
-+------------------+-----------------+-----------+--------+---------+
-| Jingle Bell Rock | 1.0             | 120.63302 | 0.0    | 128.711 |
-+------------------+-----------------+-----------+--------+---------+
-```
-- Album with the most tracks in it 
-```bash 
-+---------------+--------+
-|    release    | ntrack |
-+---------------+--------+
-| Greatest Hits | 2014   |
-+---------------+--------+
-```
-- Name of the artist with the longest song
-```bash 
-+--------------------------------+------------+
-|          artist_name           |  duration  |
-+--------------------------------+------------+
-| Mystic Revelation of Rastafari | 3034.90567 |
-+--------------------------------+------------+
-```
-- Lastly the percentage of songs without year attribute 
-```bash 
-+--------+
-| EXPR$0 |
-+--------+
-| 48.44  |
-+--------+
-```
+4. 🎁 Final nostalgic recommender
 
-> NOTE: The SQL queries can be found in `./simple-queries/queries.sql`
+Run `RecomMuse.sh`
 
-The most important one is the last one, which suggests that **Year Prediction System Is Essential**
+## 📂 Project layout
 
-# Artist Distance Graph (Milestone 4)
+RecomMuse/
+├──  data
+├──  docker-compose.yml
+├──  docs
+├── 󱁻 drill_condig_web.conf
+├──  lib
+├──  LICENSE
+├── 󰂺 README.md
+├──  requirements.txt
+├──  run-drill.sh
+├──  scripts
+└── 󰣞 src
+    ├──  artist_similarity
+    ├──  data_preperation
+    ├──  drill-queries
+    ├──  nostalgic_recommender
+    └──  year_prediction
 
-There are few features that were added: Add recommendation data to REDIS, do an instant lookup from REDIS db, and a simple BFS in a Spark. 
+## License
+MIT – hack away and make it yours.
 
-For the first one we can run 
-```bash 
-spark-submit \
-    --jars <JAR_NAME> \
-    --conf spark.driver.extraClassPath=<JAR_NAME> \
-    build_redis_cache.py --max_degrees <MAX_DEGREES> --sample_size <SAMPLE_SIZE>
-```
-
-Now in order to check and print the REDIS db we can run the following one:
-```bash 
-python3 dump_recommendations.py
-```
-
-and we get the following output 
-```bash 
-ARZPOKA11F4C83B829:
-	- AR1HDB11187FB56058 (degree 1)
-	- AR24K5Z1187B9B4BFC (degree 1)
-	- AR2CXDY1187B9B4EA8 (degree 1)
-	- AR3TZ691187FB3DBB1 (degree 1)
-	- AR3ZYST1187B9B0707 (degree 1)
-  ...
-
-ARYUXMD11F50C4AB52:
-	- AR19DTT1187FB3FA4A (degree 1)
-	- AR4Y7WE1187B98FA3F (degree 1)
-	- AR992GR1187FB3C814 (degree 1)
-	- ARBGCAL11EBCD75B65 (degree 1)
-	- ARBRWVP1241B9CC9C0 (degree 1)
-  ...
-
-ARISMYC11F50C5046D:
-	- AR00L9V1187FB4353A (degree 1)
-	- AR0B6OD1187B9ABED2 (degree 1)
-	- AR1LJAZ1187FB5AF93 (degree 1)
-	- AR2DGLV1187FB59329 (degree 1)
-	- AR2JZY41187B9B6239 (degree 1)
-  ...
-
-...
-```
-
-To check the recommendation for a certain artist we can run 
-```bash 
-python3 artist_recs.py <TARGET_ARTIST> <NUM_OF_RECOMMENDATIONS>
-```
-
-to get the following output for (ARZPOKA11F4C83B829, 8)
-```bash 
-Recommended Artists:
-	- AR1HDB11187FB56058 (degree 1)
-	- AR24K5Z1187B9B4BFC (degree 1)
-	- AR2CXDY1187B9B4EA8 (degree 1)
-	- AR3TZ691187FB3DBB1 (degree 1)
-	- AR3ZYST1187B9B0707 (degree 1)
-	- AR4K7X81187FB4BEAD (degree 1)
-	- AR6XONI1187B98DD54 (degree 1)
-	- AR7IYWW1187FB483F6 (degree 1)
-```
-
-And finally to run a BFS without REDIS db from a certain artist using 
-```bash 
-spark-submit \
-    --jars <JAR_NAME> \
-    --conf spark.driver.extraClassPath=<JAR_NAME> \
-    find_similar_artists.py <TARGET_ARTIST> <MAX_DEGREES> <NUM_OF_RECOMMENDATIONS>
-```
-
-and got the same type of output.
-
-# Year Prediction (Milestone 5)
-
-To run the year prediction model to check how good it performs you can use
-```bash
-./run-year-prediction.sh
-```
-
-To run the final prediction model and save it for further use you can type  
-```bash 
-./run-year-prediction-final.sh
-```
-
-And finally to run the model and predict the years (by replacing the year 0 in the Avro with the predicted one) you can use 
-```bash 
-./run-year-prediction-use.sh
-```
-
-# Song Recommendation (Milestone 6)
-
-To run the song recommendation program run
-```bash
-./RecomMuse.sh 
-```
-
-
-> NOTE: The song recommendation works with REDIS, but the REDIS was not fully built, because of time constraints!
+> NOTE: To see the roadmap of the progress and how all went you can check [project roadmap](./docs/ROADMAP.md).

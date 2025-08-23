@@ -2,6 +2,4 @@ src/data_preperation/src/main/java/com/recommuse/RecomMuse.java
 src/data_preperation/src/test/ 
 src/artist_similarity/__pycache__
 
-data 
 lib
-year_regressor_final
