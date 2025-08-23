@@ -1,0 +1,2 @@
+data/artist_similarity.db filter=lfs diff=lfs merge=lfs -text
+data/music_data.avro filter=lfs diff=lfs merge=lfs -text
