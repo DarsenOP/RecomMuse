@@ -1,0 +1,20 @@
+services:
+  drill:
+    image: apache/drill:1.20.2
+    stdin_open: true
+    tty: true
+    container_name: drill
+    networks:
+      - drillnet
+    extra_hosts:
+      - "namenode:192.168.11.73"
+    ports:
+      - "8047:8047"
+      - "31010:31010"
+    volumes:
+      - ./data:/data
+    user: root
+
+networks:
+  drillnet:
+    external: true
