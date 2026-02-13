@@ -1,14 +1,14 @@
-# RecomMuse 🎧  
+# RecomMuse  
 **End-to-end nostalgia-driven music recommender**  
 *Built after finishing freshman year – data pipelines, Spark, Redis, and a touch of sentiment.* 
 
-## 🚀 Demo
+## Demo
 
 ![RecomMuse Demo](docs/assets/demo.gif)
 
 ---
 
-## 📌 Overview  
+## Overview  
 RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendation** by:  
 1. Predicting the release year for tracks that lack it (Spark GBT).  
 2. Performing a breadth-first search on an artist-similarity graph (Spark RDD -> Redis).  
@@ -16,7 +16,7 @@ RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendatio
 
 ---
 
-## 🧰 Prerequisites  
+## Prerequisites  
 | Component | Purpose |
 |-----------|---------|
 | **Java** | Spark & Drill runtime |
@@ -27,12 +27,12 @@ RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendatio
 | **Redis** | Low-latency neighbour cache |
 | **Apache Drill** | SQL exploration on HDFS/Avro |
 
-> 🔧 **Need help installing Hadoop/Spark/Drill?**  
+> **Need help installing Hadoop/Spark/Drill?**  
 > See [Issue #1](https://github.com/DarsenOP/RecomMuse/issues/1) – step-by-step setup is explained there.
 
 ---
 
-## 📊 Data Preparation  
+## Data Preparation  
 1. **HDF5 -> Avro**  
    ```bash
    cd data-preparation
@@ -51,23 +51,23 @@ RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendatio
    # Copy drill_condig_web.conf into Drill Web UI -> Storage -> dfs -> Update
    ```
 
-## 🚀 Running RecomMuse
+## Running RecomMuse
 
-1. 🔧 One-time environment
+1. One-time environment
     ```bash
     chmod +x setup_env.sh
     ./setup_env.sh
     source .venv/bin/activate  
     ```
 
-2. 🧠 Year pipeline (first time only)
+2. Year pipeline (first time only)
     ```bash
     ./run_train_model.sh    # train GBT regressor
     ./run_evaluate_model.sh # optional RMSE/R² check
     ./run_predict_years.sh  # fill missing years
     ```
 
-3. 🎶 Artist similarity (pick one)
+3. Artist similarity (pick one)
 
 | Command                                        | Description                                      |
 | ---------------------------------------------- | ------------------------------------------------ |
@@ -76,7 +76,7 @@ RecomMuse takes a **song** or **artist** and returns a **nostalgic recommendatio
 | `./run_artist_recs.sh ARTIST_ID 5`             | Instant Redis lookup                             |
 | `./run_dump_recommendations.sh`                | List every cached artist                         |
 
-4. 🎁 Final nostalgic recommender
+4. Final nostalgic recommender
 
 Run `RecomMuse.sh`
 
